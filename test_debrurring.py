@@ -1,12 +1,11 @@
 import torch
-import torch.nn as nn
 from torchvision import transforms
 from PIL import Image
 import os
 
 
 # 确保从你的模型文件中导入 DeblurUNet 和依赖的 DoubleConv
-from model import DeblurUNet
+from models.self_model import DeblurUNet
 
 def test_single_image():
     # --- 1. 配置路径 ---

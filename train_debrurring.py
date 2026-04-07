@@ -7,8 +7,8 @@ from PIL import Image
 import os, glob, time
 from tqdm import tqdm
 
-# --- 1. 直接从你的 model.py 调用模型 ---
-from model import DeblurUNet
+# --- 1. 直接从你的 self_model.py 调用模型 ---
+from models.self_model import DeblurUNet
 
 
 # --- 2. 数据集定义 (精准匹配你的命名规则) ---

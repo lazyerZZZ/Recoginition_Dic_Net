@@ -1,9 +1,8 @@
 import torch
-import torch.nn as nn
 from torchvision import transforms
 from PIL import Image
 import os
-from model import DivideNet_V3  # 确保 model.py 在同级目录
+from models.self_model import DivideNet_V3  # 确保 self_model.py 在同级目录
 
 
 def test():

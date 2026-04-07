@@ -6,7 +6,7 @@ from torchvision import transforms
 from PIL import Image
 import os, glob, time
 from tqdm import tqdm
-from model import DivideNet_V3
+from models.self_model import DivideNet_V3
 
 
 # --- 数据集定义 ---
