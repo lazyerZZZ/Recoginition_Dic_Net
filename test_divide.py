@@ -2,19 +2,19 @@ import torch
 from torchvision import transforms
 from PIL import Image
 import os
-from models.self_model import DivideNet_V4  # 确保 self_model.py 在同级目录
+from models.self_model import DivideNet_V3  # 确保 self_model.py 在同级目录
 
 
 def test():
     # --- 1. 配置参数 ---
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model_path = "/home/wenhao/bishe_code/checkpoints/V4_UNet_Final/best_model_v4.pth"
+    model_path = "/home/wenhao/bishe_code/checkpoints/V3_Final/best_model_v3.pth"
     input_path = "/home/wenhao/bishe_code/bishe_DivideNet_photoes_Preprocessing/48_34_blended.png"  # 换成你想测试的图
-    save_dir = "/home/wenhao/bishe_code/test_results/11"
+    save_dir = "/home/wenhao/bishe_code/test_results/21"
     os.makedirs(save_dir, exist_ok=True)
 
     # --- 2. 加载模型 ---
-    model = DivideNet_V4().to(device)
+    model = DivideNet_V3().to(device)
     # 加载保存的权重
     state_dict = torch.load(model_path, map_location=device)
     model.load_state_dict(state_dict)
