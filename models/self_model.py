@@ -198,3 +198,96 @@ class DeblurUNet(nn.Module):
         d1 = self.dec1(torch.cat([self.up1(d2), e1], dim=1))
 
         return self.final(d1)
+
+
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+
+
+class ConvBlock(nn.Module):
+    """基础卷积模块：Conv -> BN -> ReLU -> Conv -> BN -> ReLU"""
+
+    def __init__(self, in_ch, out_ch):
+        super(ConvBlock, self).__init__()
+        self.conv = nn.Sequential(
+            nn.Conv2d(in_ch, out_ch, 3, padding=1),
+            nn.BatchNorm2d(out_ch),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(out_ch, out_ch, 3, padding=1),
+            nn.BatchNorm2d(out_ch),
+            nn.ReLU(inplace=True)
+        )
+
+    def forward(self, x):
+        return self.conv(x)
+
+
+class DivideNet_V4(nn.Module):
+    def __init__(self, in_channels=1, out_channels=1):
+        super(DivideNet_V4, self).__init__()
+
+        # --- Encoder Clear (提取清晰特征) ---
+        self.ec1 = ConvBlock(in_channels, 32)
+        self.ec2 = ConvBlock(32, 64)
+        self.ec3 = ConvBlock(64, 128)
+        self.ec4 = ConvBlock(128, 256)  # 增加了一层深度
+
+        # --- Encoder Blur (提取模糊特征) ---
+        self.eb1 = ConvBlock(in_channels, 32)
+        self.eb2 = ConvBlock(32, 64)
+        self.eb3 = ConvBlock(64, 128)
+        self.eb4 = ConvBlock(128, 256)
+
+        self.pool = nn.MaxPool2d(2)
+
+        # --- Decoder Clear ---
+        self.upc1 = nn.ConvTranspose2d(256, 128, 2, stride=2)
+        self.dc1 = ConvBlock(256, 128)  # 128(up) + 128(skip)
+        self.upc2 = nn.ConvTranspose2d(128, 64, 2, stride=2)
+        self.dc2 = ConvBlock(128, 64)
+        self.upc3 = nn.ConvTranspose2d(64, 32, 2, stride=2)
+        self.dc3 = ConvBlock(64, 32)
+        self.out_c = nn.Sequential(nn.Conv2d(32, out_channels, 1), nn.Sigmoid())
+
+        # --- Decoder Blur ---
+        self.upb1 = nn.ConvTranspose2d(256, 128, 2, stride=2)
+        self.db1 = ConvBlock(256, 128)
+        self.upb2 = nn.ConvTranspose2d(128, 64, 2, stride=2)
+        self.db2 = ConvBlock(128, 64)
+        self.upb3 = nn.ConvTranspose2d(64, 32, 2, stride=2)
+        self.db3 = ConvBlock(64, 32)
+        self.out_b = nn.Sequential(nn.Conv2d(32, out_channels, 1), nn.Sigmoid())
+
+    def forward(self, x):
+        # Encoder Clear Path
+        c1 = self.ec1(x)
+        c2 = self.ec2(self.pool(c1))
+        c3 = self.ec3(self.pool(c2))
+        c4 = self.ec4(self.pool(c3))
+
+        # Encoder Blur Path
+        b1 = self.eb1(x)
+        b2 = self.eb2(self.pool(b1))
+        b3 = self.eb3(self.pool(b2))
+        b4 = self.eb4(self.pool(b3))
+
+        # Decoding Clear (带 Skip Connection)
+        xc = self.upc1(c4)
+        xc = self.dc1(torch.cat([xc, c3], dim=1))
+        xc = self.upc2(xc)
+        xc = self.dc2(torch.cat([xc, c2], dim=1))
+        xc = self.upc3(xc)
+        xc = self.dc3(torch.cat([xc, c1], dim=1))
+        pred_c = self.out_c(xc)
+
+        # Decoding Blur (带 Skip Connection)
+        xb = self.upb1(b4)
+        xb = self.db1(torch.cat([xb, b3], dim=1))
+        xb = self.upb2(xb)
+        xb = self.db2(torch.cat([xb, b2], dim=1))
+        xb = self.upb3(xb)
+        xb = self.db3(torch.cat([xb, b1], dim=1))
+        pred_b = self.out_b(xb)
+
+        return pred_c, pred_b
