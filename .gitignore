@@ -6,4 +6,4 @@
 /results/
 /test_results/
 *.pth.tar
-checkpoints/*.pth.tar
+/checkpoints/
