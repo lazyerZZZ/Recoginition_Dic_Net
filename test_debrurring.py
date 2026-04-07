@@ -12,9 +12,9 @@ def test_single_image():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     # 精确到单张图片的绝对路径
-    input_image_path = '/home/wenhao/bishe_code/test_results/6/48_34_blended_pred_blur.png'
+    input_image_path = '/home/wenhao/bishe_code/bishe_DeblurringNet_Preprocessing/deblur_39_20_blurred.png'
     model_path = '/home/wenhao/bishe_code/checkpoints/Deblur_V1/best_deblur_model.pth'
-    save_dir = '/home/wenhao/bishe_code/results'
+    save_dir = '/home/wenhao/bishe_code/test_results/10'
 
     os.makedirs(save_dir, exist_ok=True)
 
