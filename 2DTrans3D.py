@@ -53,11 +53,31 @@ def reconstruct_3d_pro():
     pts2 = np.vstack((x2.flatten(), y2.flatten())).T.reshape(-1, 1, 2)
 
     # --- 5. 坐标去畸变 (关键：消除镜头扭曲) ---
+    print("正在科学裁剪 ROI 安全区域...")
+    mask_roi = np.zeros_like(u_field, dtype=bool)
+
+    # 定义安全收缩边界 (根据你的实验图，建议收缩50像素)
+    margin = 200
+    h, w = u_field.shape
+
+    # 将内部 2048 - 50*2 = 1948x1948 的区域设为有效
+    mask_roi[margin:h - margin, margin:w - margin] = True
+
+    # 3. 组合过滤：保留在 ROI 内且不是 NaN 的点 (如果有的话)
+    # linear griddata 默认包围圈外是NaN
+    # 我们不仅要 NaN，还要 ROI 内部的点
+    # 如果你在 DIC 代码里用中值填充了 NaNs，请注意这里的处理
+    mask_final = mask_roi & (~np.isnan(u_field)) & (~np.isnan(v_field))
+    flat_mask = mask_final.flatten()
     print("正在进行畸变校正...")
-    pts1_input = pts1.astype(np.float32).copy()
-    pts2_input = pts2.astype(np.float32).copy()
-    pts1_ud = cv2.undistortPoints(pts1_input, K1, dist1, P=K1)
-    pts2_ud = cv2.undistortPoints(pts2_input, K2, dist2, P=K2)
+    pts1_valid = pts1[flat_mask].astype(np.float32).copy()
+    pts2_valid = pts2[flat_mask].astype(np.float32).copy()
+
+    print(f"剔除边缘无效点后，剩余计算点数: {len(pts1_valid)}")
+
+    # 接下来只对 pts1_valid 和 pts2_valid 进行 undistortPoints 和 triangulatePoints
+    pts1_ud = cv2.undistortPoints(pts1_valid, K1, dist1, P=K1)
+    pts2_ud = cv2.undistortPoints(pts2_valid, K2, dist2, P=K2)
 
     # --- 6. 执行三角化 (Triangulation) ---
     print("正在进行三维空间三角化...")

@@ -10,8 +10,8 @@ from scipy.interpolate import griddata
 save_dir = "/home/wenhao/bishe_code/2DTrans3D_result/"
 os.makedirs(save_dir, exist_ok=True)
 
-path_left = '/home/wenhao/bishe_code/2DTrans3D_photoes/Camera00_00000001_00.bmp'
-path_right = '/home/wenhao/bishe_code/2DTrans3D_photoes/Camera00_00000002_00.bmp'
+path_left = '/home/wenhao/bishe_code/2DTrans3D_photoes/Camera00_00000014_00.bmp'
+path_right = '/home/wenhao/bishe_code/2DTrans3D_photoes/Camera00_00000015_00.bmp'
 
 img_l = cv2.imread(path_left, 0)
 img_r = cv2.imread(path_right, 0)
@@ -49,8 +49,8 @@ dense_u = griddata(v_pts1, raw_u, (grid_x, grid_y), method='linear')
 dense_v = griddata(v_pts1, raw_v, (grid_x, grid_y), method='linear')
 
 # 填充边缘 NaN 值为全局中值，防止后续 3D 转换报错
-dense_u = np.nan_to_num(dense_u, nan=np.nanmedian(raw_u))
-dense_v = np.nan_to_num(dense_v, nan=np.nanmedian(raw_v))
+# dense_u = np.nan_to_num(dense_u, nan=np.nanmedian(raw_u))
+# dense_v = np.nan_to_num(dense_v, nan=np.nanmedian(raw_v))
 
 # --- 4. 存储数据 ---
 np.save(os.path.join(save_dir, 'raw_disp_u.npy'), dense_u)
