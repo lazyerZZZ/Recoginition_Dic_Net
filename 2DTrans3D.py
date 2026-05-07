@@ -1,78 +1,89 @@
-import cv2
 import numpy as np
+import cv2
 import os
 
-# --- 5. 点云转换逻辑（全参数注入版） ---
 
-# 1. 左相机内参矩阵 M1 (根据图片 Calibration_1)
-fx1, fy1 = 9426.84, 9405.09
-cx1, cy1 = 1023.67, 1050.64
-M1 = np.array([
-    [fx1,   0, cx1],
-    [  0, fy1, cy1],
-    [  0,   0,   1]
-], dtype=np.float64)
+def get_rotation_matrix(x_deg, y_deg, z_deg):
+    """将欧拉角转换为旋转矩阵"""
+    # 转换弧度
+    rx, ry, rz = np.radians([x_deg, y_deg, z_deg])
+    # 计算旋转矩阵 (一般遵循 Z-Y-X 顺序)
+    R_x = np.array([[1, 0, 0], [0, np.cos(rx), -np.sin(rx)], [0, np.sin(rx), np.cos(rx)]])
+    R_y = np.array([[np.cos(ry), 0, np.sin(ry)], [0, 1, 0], [-np.sin(ry), 0, np.cos(ry)]])
+    R_z = np.array([[np.cos(rz), -np.sin(rz), 0], [np.sin(rz), np.cos(rz), 0], [0, 0, 1]])
+    return R_z @ R_y @ R_x
 
-# 左相机畸变系数
-D1 = np.array([-0.118265, 22.0724, 0.0115377, 0.00425971, 0], dtype=np.float64)
 
-# 2. 右相机内参矩阵 M2
-fx2, fy2 = 9620.13, 9370.52
-cx2, cy2 = 1099.7, 1122.3
-M2 = np.array([
-    [fx2,   0, cx2],
-    [  0, fy2, cy2],
-    [  0,   0,   1]
-], dtype=np.float64)
+def reconstruct_3d_pro():
+    # --- 1. 输入路径设置 ---
+    data_dir = "/home/wenhao/bishe_code/2DTrans3D_result/"
+    u_field = np.load(os.path.join(data_dir, 'raw_disp_u.npy'))
+    v_field = np.load(os.path.join(data_dir, 'raw_disp_v.npy'))
+    h, w = u_field.shape  # 2048x2048
 
-# 右相机畸变系数
-D2 = np.array([0.426466, 22.5269, 0.0212542, 0.0504823, 0], dtype=np.float64)
+    # --- 2. 标定参数录入 ---
+    # 左相机 K1
+    K1 = np.array([[9426.84, -54.3315, 1023.97],
+                   [0, 9405.09, 1050.64],
+                   [0, 0, 1]])
+    dist1 = np.array([-0.118265, 22.0724, 0.0115377, -0.00425971, 0])  # k1,k2,p1,p2,k3
 
-# 3. 旋转矩阵 R (将角度转为弧度，并构建旋转矩阵)
-# 图片中：X: 1.22243deg, Y: -33.8813deg, Z: 1.22943deg
-r_x = np.radians(1.22243)
-r_y = np.radians(-33.8813)
-r_z = np.radians(1.22943)
+    # 右相机 K2
+    K2 = np.array([[9620.13, -124.281, 1099.7],
+                   [0, 9370.52, 1122.3],
+                   [0, 0, 1]])
+    dist2 = np.array([0.426466, 22.5269, 0.0212542, 0.0504823, 0])
 
-# 依次计算绕 X, Y, Z 轴的旋转矩阵
-R_x = np.array([[1, 0, 0], [0, np.cos(r_x), -np.sin(r_x)], [0, np.sin(r_x), np.cos(r_x)]])
-R_y = np.array([[np.cos(r_y), 0, np.sin(r_y)], [0, 1, 0], [-np.sin(r_y), 0, np.cos(r_y)]])
-R_z = np.array([[np.cos(r_z), -np.sin(r_z), 0], [np.sin(r_z), np.cos(r_z), 0], [0, 0, 1]])
-R = R_z @ R_y @ R_x  # 组合旋转矩阵
+    # 外参 (右相对于左)
+    R = get_rotation_matrix(1.22243, -33.8813, 1.22943)
+    T = np.array([[183.001], [6.1305], [50.3829]])
 
-# 4. 平移向量 T (单位: mm)
-T = np.array([[183.001], [6.1305], [50.3829]], dtype=np.float64)
+    # --- 3. 构建投影矩阵 P = K [R|t] ---
+    P1 = K1 @ np.hstack((np.eye(3), np.zeros((3, 1))))  # 左相机作为原点
+    P2 = K2 @ np.hstack((R, T))
 
-# 5. 立体校正：计算重投影矩阵 Q
-# 因为你的虚拟双目非对称性很强（绕Y轴转了33度），必须通过这个函数计算出理想的对齐矩阵
-image_size = (2048, 2048) # 假设你的图像尺寸，根据实际修改
-R1, R2, P1, P2, Q, validRoi1, validRoi2 = cv2.stereoRectify(
-    M1, D1, M2, D2, image_size, R, T
-)
+    # --- 4. 准备像素坐标对 ---
+    print("正在处理像素坐标...")
+    y, x = np.mgrid[0:h, 0:w]
+    pts1 = np.vstack((x.flatten(), y.flatten())).T.reshape(-1, 1, 2)
 
-# 6. 利用 Q 矩阵将视差图转换为 3D 点云
-# 注：disparity 是之前通过 stereo.compute 算出来的
-disparity = np.load(os.path.join('/home/wenhao/bishe_code/2DTrans3D_result', "disparity_tvl1.npy"))
-disparity = disparity.astype(np.float32)
-mask = disparity > 0
-h, w = disparity.shape
-u, v = np.meshgrid(np.arange(w), np.arange(h))
+    # 根据视差场找到右图对应点
+    x2 = x + u_field
+    y2 = y + v_field
+    pts2 = np.vstack((x2.flatten(), y2.flatten())).T.reshape(-1, 1, 2)
 
-# 为每个像素构建 (u, v, d) 向量
-points_2d = np.stack((u, v, disparity), axis=-1).reshape(-1, 3)
+    # --- 5. 坐标去畸变 (关键：消除镜头扭曲) ---
+    print("正在进行畸变校正...")
+    pts1_input = pts1.astype(np.float32).copy()
+    pts2_input = pts2.astype(np.float32).copy()
+    pts1_ud = cv2.undistortPoints(pts1_input, K1, dist1, P=K1)
+    pts2_ud = cv2.undistortPoints(pts2_input, K2, dist2, P=K2)
 
-# 重投影到 3D 空间
-# cv2.reprojectImageTo3D 内部使用的是标准的齐次坐标变换
-points_3d = cv2.reprojectImageTo3D(disparity, Q)
+    # --- 6. 执行三角化 (Triangulation) ---
+    print("正在进行三维空间三角化...")
+    # cv2.triangulatePoints 需要 2xN 的输入
+    points_4d = cv2.triangulatePoints(P1, P2, pts1_ud.reshape(-1, 2).T, pts2_ud.reshape(-1, 2).T)
 
-z_channel = points_3d[:, :, 2]
+    # 归一化齐次坐标得到 (X, Y, Z)
+    points_3d = points_4d[:3, :] / points_4d[3, :]
+    points_3d = points_3d.T  # 变为 Nx3
 
-# 过滤掉无效视差的点
-point_cloud = points_3d[mask]
+    # --- 7. 结果过滤与保存 ---
+    # 过滤无效点（比如离相机太远或太近的点，根据你的实验台调整）
+    z_vals = points_3d[:, 2]
+    mask = (z_vals > 50) & (z_vals < 500)
+    valid_points = points_3d[mask]
 
-# 7. 保存点云为 .xyz 格式
-save_path = os.path.join('/home/wenhao/bishe_code/2DTrans3D_result', "cloud_output_perfect.xyz")
-np.savetxt(save_path, point_cloud, fmt='%.4f')
+    output_path = os.path.join(data_dir, "final_scientific_cloud.xyz")
+    np.savetxt(output_path, valid_points, fmt='%.4f %.4f %.4f')
 
-print(f"点云转换成功（已结合左右相机参数与立体校正）！")
-print(f"有效生成点数: {point_cloud.shape[0]}")
+    print("-" * 30)
+    print(f"重建完成！")
+    print(f"原始点数: {len(points_3d)} | 有效点数: {len(valid_points)}")
+    print(f"平均深度 Z: {np.mean(valid_points[:, 2]):.2f} mm")
+    print(f"存储路径: {output_path}")
+    print("-" * 30)
+
+
+if __name__ == "__main__":
+    reconstruct_3d_pro()

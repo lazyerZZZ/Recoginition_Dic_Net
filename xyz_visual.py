@@ -3,7 +3,7 @@ import numpy as np
 
 # 1. 加载你刚刚生成的点云文件
 # 假设文件路径是 /home/wenhao/bishe_code/cloud_output_perfect.xyz
-pcd_path = "xyz/cloud_output_perfect.xyz"
+pcd_path = "./2DTrans3D_result/final_scientific_cloud.xyz"
 points = np.loadtxt(pcd_path)
 
 # 2. 创建 Open3D 点云对象
