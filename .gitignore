@@ -8,3 +8,4 @@
 *.pth.tar
 /checkpoints/
 /2DTrans3D_photoes/
+/xyz/
