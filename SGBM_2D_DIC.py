@@ -63,7 +63,7 @@ y = (v[mask] - cy) * z / fy
 point_cloud = np.vstack((x, y, z)).T
 
 # 保存为 .xyz 格式，可以用 MeshLab 打开
-np.savetxt(os.path.join('/home/wenhao/bishe_code', "cloud_output.xyz"), point_cloud, fmt='%.4f')
+np.savetxt(os.path.join('/home/wenhao/bishe_code/xyz', "cloud_output.xyz"), point_cloud, fmt='%.4f')
 print(f"点云转换成功！生成点数: {point_cloud.shape[0]}")
 print("点云文件已保存至: cloud_output.xyz")
 
