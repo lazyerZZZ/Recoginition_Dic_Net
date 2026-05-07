@@ -1,9 +1,11 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.interpolate import RectBivariateSpline
+import os
 
 # 1. 加载你原来有阶梯的视差图
-original_disp_path = '/xyz/disparity_data.npy'
+target_dir = "/home/wenhao/bishe_code/xyz"
+original_disp_path = os.path.join(target_dir, 'disparity_data.npy')
 disparity = np.load(original_disp_path)
 
 # 2. 检查是否有无效点 (SGBM生成的无效点通常是负数或无穷大)
@@ -26,7 +28,7 @@ new_disparity = spline_func(y, x)
 new_disparity[~valid_mask] = -1
 
 # 6. 保存平滑后的新视差图
-smoothed_disp_path = '/xyz/disparity_data_smoothed.npy'
+smoothed_disp_path = os.path.join(target_dir, 'disparity_data_smoothed.npy')
 np.save(smoothed_disp_path, new_disparity)
 print(f"平滑后的视差图已保存至: {smoothed_disp_path}")
 
