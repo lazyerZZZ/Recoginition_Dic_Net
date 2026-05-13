@@ -21,7 +21,6 @@ h, w = img_l.shape
 
 print("正在构建计算网格...")
 # --- 2. 在左图生成均匀的追踪网格 (ROI区域) ---
-# 避开边缘，每隔 15 个像素取一个追踪点
 margin = 50
 step = 15
 grid_x, grid_y = np.meshgrid(np.arange(margin, w - margin, step),
@@ -31,50 +30,69 @@ p0 = p0.reshape(-1, 1, 2)
 
 # --- 3. 金字塔 Lucas-Kanade 亚像素光流 ---
 print("正在进行金字塔光流追踪 (Coarse-to-Fine)...")
-# 参数极其关键：
-# winSize: 窗口大小，设为 41 保证包含足够的散斑特征
-# maxLevel: 金字塔层数，设为 4 代表会缩小 2^4 = 16 倍进行粗匹配，彻底解决大位移脱靶
 lk_params = dict(winSize=(41, 41),
                  maxLevel=4,
                  criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 50, 0.001))
 
 p1, st, err = cv2.calcOpticalFlowPyrLK(img_l, img_r, p0, None, **lk_params)
 
-# --- 4. 提取有效点并计算水平视差 ---
-# st == 1 代表追踪成功的点
+# --- 4. 提取有效点并计算水平/垂直视差 ---
 good_old = p0[st == 1]
 good_new = p1[st == 1]
 
 # 计算水平位移 (X方向)
 disparity_x = good_new[:, 0] - good_old[:, 0]
+# 新增：计算垂直位移 (Y方向)
+disparity_y = good_new[:, 1] - good_old[:, 1]
 
 # --- 5. 扣除系统偏置 ---
 offset = 1099.7 - 1023.67
 aligned_disparity_x = disparity_x - offset
+# 垂直方向通常不需要偏置，直接使用
+aligned_disparity_y = disparity_y
 
 print(f"追踪成功点数: {len(aligned_disparity_x)}")
-print(f"有效水平视差中值: {np.median(aligned_disparity_x):.4f}")
 
 # --- 6. 插值恢复为稠密视差图 ---
 print("正在插值生成稠密视差场...")
 grid_x_dense, grid_y_dense = np.meshgrid(np.arange(0, w), np.arange(0, h))
-dense_disparity = griddata((good_old[:, 0], good_old[:, 1]), aligned_disparity_x,
-                           (grid_x_dense, grid_y_dense), method='linear')
 
-# 处理边缘的 NaN 值
-dense_disparity = np.nan_to_num(dense_disparity, nan=np.median(aligned_disparity_x))
+# 水平方向插值 (保持原逻辑)
+dense_disparity_x = griddata((good_old[:, 0], good_old[:, 1]), aligned_disparity_x,
+                             (grid_x_dense, grid_y_dense), method='linear')
+dense_disparity_x = np.nan_to_num(dense_disparity_x, nan=np.median(aligned_disparity_x))
+
+# 新增：垂直方向插值 (完全对齐原逻辑)
+dense_disparity_y = griddata((good_old[:, 0], good_old[:, 1]), aligned_disparity_y,
+                             (grid_x_dense, grid_y_dense), method='linear')
+dense_disparity_y = np.nan_to_num(dense_disparity_y, nan=np.median(aligned_disparity_y))
 
 # --- 7. 保存结果 ---
 save_dir = "/home/wenhao/bishe_code/2DTrans3D_result"
 os.makedirs(save_dir, exist_ok=True)
-np.save(os.path.join(save_dir, 'disparity_pyrlk.npy'), dense_disparity)
 
+# 保存数据
+np.save(os.path.join(save_dir, 'u_field_pyrlk.npy'), dense_disparity_x)
+np.save(os.path.join(save_dir, 'v_field_pyrlk.npy'), dense_disparity_y)
+
+# 绘图 1: 水平视差 (保持原渲染逻辑)
 plt.figure(figsize=(10, 8))
-# 限制显示范围，排除极个别追踪失败的离群点干扰
-vmin = np.percentile(aligned_disparity_x, 5)
-vmax = np.percentile(aligned_disparity_x, 95)
-plt.imshow(dense_disparity, cmap='jet', vmin=vmin, vmax=vmax)
+vmin_x = np.percentile(aligned_disparity_x, 5)
+vmax_x = np.percentile(aligned_disparity_x, 95)
+plt.imshow(dense_disparity_x, cmap='jet', vmin=vmin_x, vmax=vmax_x)
 plt.colorbar(label='Aligned Horizontal Disparity (pixels)')
-plt.title("Pyramidal LK Sub-pixel Disparity Field")
-plt.savefig(os.path.join(save_dir, 'pyrlk_disparity.png'))
-print("计算完成，结果已保存！")
+plt.title("U Field (Horizontal Disparity)")
+plt.savefig(os.path.join(save_dir, 'pyrlk_disparity_U.png'))
+plt.close()
+
+# 绘图 2: 垂直视差 (新增输出)
+plt.figure(figsize=(10, 8))
+vmin_y = np.percentile(aligned_disparity_y, 5)
+vmax_y = np.percentile(aligned_disparity_y, 95)
+plt.imshow(dense_disparity_y, cmap='jet', vmin=vmin_y, vmax=vmax_y)
+plt.colorbar(label='Vertical Disparity (pixels)')
+plt.title("V Field (Vertical Disparity)")
+plt.savefig(os.path.join(save_dir, 'pyrlk_disparity_V.png'))
+plt.close()
+
+print("计算完成，U/V 两个维度的结果已保存！")
