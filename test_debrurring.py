@@ -7,6 +7,7 @@ import os
 # 确保从你的模型文件中导入 DeblurUNet 和依赖的 DoubleConv
 from models.self_model import DeblurUNet
 
+
 def test_single_image():
     # --- 1. 配置路径 ---
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -49,7 +50,7 @@ def test_single_image():
     with torch.no_grad():
         # 加载并转为灰度图 ('L')，因为你的 enc1 输入通道是 1
         img_pil = Image.open(input_image_path).convert('L')
-        orig_size = img_pil.size  # 记录原始尺寸用于还原 (可选)
+        # orig_size = img_pil.size  # 记录原始尺寸用于还原 (可选)
 
         input_tensor = transform(img_pil).unsqueeze(0).to(device)  # [1, 1, 256, 256]
 
@@ -69,7 +70,7 @@ def test_single_image():
         save_path = os.path.join(save_dir, f"restored_{file_name}")
         output_img.save(save_path)
 
-    print(f"\n处理完成！")
+    print("\n处理完成！")
     print(f"输入路径: {input_image_path}")
     print(f"保存路径: {save_path}")
 

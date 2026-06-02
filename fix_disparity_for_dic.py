@@ -1,5 +1,4 @@
 import numpy as np
-import matplotlib.pyplot as plt
 from scipy.interpolate import RectBivariateSpline
 import os
 
@@ -10,7 +9,7 @@ disparity = np.load(original_disp_path)
 
 # 2. 检查是否有无效点 (SGBM生成的无效点通常是负数或无穷大)
 valid_mask = (disparity > 0) & np.isfinite(disparity)
-disparity[~valid_mask] = np.mean(disparity[valid_mask]) # 用均值简单填充无效点，方便插值
+disparity[~valid_mask] = np.mean(disparity[valid_mask])  # 用均值简单填充无效点，方便插值
 
 h, w = disparity.shape
 x = np.arange(w)

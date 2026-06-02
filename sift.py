@@ -1,10 +1,10 @@
 import cv2
 import numpy as np
 import os
-import matplotlib.pyplot as plt
+from scipy.interpolate import griddata
 import matplotlib
 matplotlib.use('Agg')
-from scipy.interpolate import griddata
+import matplotlib.pyplot as plt  # noqa: E402
 
 # --- 1. 初始化路径 ---
 save_dir = "/home/wenhao/bishe_code/2DTrans3D_result/"
@@ -15,7 +15,7 @@ path_right = '/home/wenhao/bishe_code/2DTrans3D_photoes/Camera00_00000015_00.bmp
 
 img_l = cv2.imread(path_left, 0)
 img_r = cv2.imread(path_right, 0)
-h, w = img_l.shape # 2048, 2048
+h, w = img_l.shape  # 2048, 2048
 
 # --- 2. 提取特征与大位移匹配 ---
 print("正在提取 SIFT 特征并进行全图匹配...")

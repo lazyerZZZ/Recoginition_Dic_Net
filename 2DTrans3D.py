@@ -4,6 +4,7 @@ import os
 import open3d as o3d
 from scipy.ndimage import median_filter
 
+
 def get_rotation_matrix(x_deg, y_deg, z_deg):
     """将欧拉角转换为旋转矩阵"""
     # 转换弧度
@@ -166,7 +167,7 @@ def reconstruct_3d_pro():
     np.savetxt(output_path, valid_points, fmt='%.4f %.4f %.4f')
 
     print("-" * 30)
-    print(f"重建完成！")
+    print("重建完成！")
     print(f"原始点数: {len(points_3d)} | 有效点数: {len(valid_points)}")
     print(f"平均深度 Z: {np.mean(valid_points[:, 2]):.2f} mm")
     print(f"存储路径: {output_path}")

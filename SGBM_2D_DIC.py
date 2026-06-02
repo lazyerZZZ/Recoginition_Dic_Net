@@ -3,7 +3,7 @@ import numpy as np
 import os
 import matplotlib
 matplotlib.use('Agg')
-import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt  # noqa: E402
 
 # 1. 路径设置
 base_path = '/home/wenhao/bishe_code/2DTrans3D_photoes/'
@@ -25,13 +25,13 @@ stereo = cv2.StereoSGBM_create(
     blockSize=window_size,
     P1=8 * 3 * window_size**2,
     P2=32 * 3 * window_size**2,
-    mode=cv2.STEREO_SGBM_MODE_SGBM_3WAY
+    mode=cv2.STEREO_SGBM_MODE_SGBM_3WAY,
 )
 
 # --- 3. 计算 U 场 (水平方向) ---
 print("正在计算水平视差 U...")
 disparity_u = stereo.compute(img_left, img_right).astype(np.float32) / 16.0
-u_field = disparity_u - (1099.7 - 1023.67) # 补偿主点偏移
+u_field = disparity_u - (1099.7 - 1023.67)  # 补偿主点偏移
 
 # --- 4. 计算 V 场 (竖直方向 - 采用旋转技巧) ---
 print("正在通过旋转计算竖直视差 V...")
@@ -69,6 +69,6 @@ plt.savefig(output_path, dpi=300)
 plt.close()
 
 print("-" * 30)
-print(f"完成！已通过旋转法强行让 SGBM 计算了竖直方向。")
+print("完成！已通过旋转法强行让 SGBM 计算了竖直方向。")
 print(f"结果图片: {output_path}")
 print("-" * 30)

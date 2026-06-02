@@ -2,9 +2,10 @@ import numpy as np
 import pyransac3d as pyrsc
 import os
 
+
 def process_cylinder_cloud():
     # --- 参数设置 ---
-    input_cloud_path = "/home/wenhao/bishe_code/2DTrans3D_result/final_scientific_cloud.xyz" # 替换为你的点云路径
+    input_cloud_path = "/home/wenhao/bishe_code/2DTrans3D_result/final_scientific_cloud.xyz"  # 替换为你的点云路径
     save_dir = "/home/wenhao/bishe_code/2DTrans3D_result/final_scientific_cloud"
     os.makedirs(save_dir, exist_ok=True)
 
@@ -40,6 +41,7 @@ def process_cylinder_cloud():
     save_path = os.path.join(save_dir, 'cleaned_cylinder_cloud.xyz')
     np.savetxt(save_path, valid_points, fmt='%.4f %.4f %.4f')
     print(f"去噪点云已保存至: {save_path}")
+
 
 if __name__ == "__main__":
     process_cylinder_cloud()

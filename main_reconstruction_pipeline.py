@@ -1,10 +1,8 @@
 import torch
 import numpy as np
 import cv2
-import pandas as pd
 from PIL import Image
 from torchvision import transforms
-import os
 
 # 假设模型类定义在 models 文件夹中
 from models.self_model import DivideNet_V4
@@ -30,7 +28,7 @@ class StereoReconstructor:
 
         self.transform = transforms.Compose([
             transforms.Resize((256, 256)),
-            transforms.ToTensor()
+            transforms.ToTensor(),
         ])
 
     def _scale_camera_intrinsic(self, K, orig_size, new_size):
@@ -94,7 +92,7 @@ if __name__ == "__main__":
     K_orig = np.array([
         [1250.5, 0, 640.2],
         [0, 1250.8, 360.5],
-        [0, 0, 1]
+        [0, 0, 1],
     ])
 
     # 遮住右镜标定左镜得到的位姿 (示例)
@@ -110,7 +108,7 @@ if __name__ == "__main__":
         div_path='checkpoints/V4_UNet_Final/best_model_v4.pth',
         strain_path='/home/wenhao/bishe_code/checkpoints/StrainNet-f.pth.tar',
         K_raw=K_orig,
-        orig_size=(1280, 720)
+        orig_size=(1280, 720),
     )
 
     # 执行并保存

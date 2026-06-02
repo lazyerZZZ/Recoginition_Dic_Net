@@ -4,7 +4,9 @@ import torch.optim as optim
 from torch.utils.data import DataLoader, Dataset, random_split
 from torchvision import transforms
 from PIL import Image
-import os, glob, time
+import os
+import glob
+import time
 from tqdm import tqdm
 
 # --- 1. 直接从你的 self_model.py 调用模型 ---
@@ -50,7 +52,7 @@ def train():
 
     transform = transforms.Compose([
         transforms.Resize((256, 256)),
-        transforms.ToTensor()
+        transforms.ToTensor(),
     ])
 
     # --- 数据划分 ---

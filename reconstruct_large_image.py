@@ -2,7 +2,6 @@ import torch
 from torchvision import transforms
 from PIL import Image
 import os
-import math
 from models.self_model import DivideNet_V3
 
 
@@ -46,7 +45,7 @@ def reconstruct():
     # 预处理转换
     transform = transforms.Compose([
         transforms.Resize((tile_size, tile_size)),
-        transforms.ToTensor()
+        transforms.ToTensor(),
     ])
     to_pil = transforms.ToPILImage()
 

@@ -26,7 +26,7 @@ rows = range(SUBSET_SIZE, h - SUBSET_SIZE, STEP_SIZE)
 cols = range(SUBSET_SIZE, w - SUBSET_SIZE - SEARCH_MARGIN, STEP_SIZE)
 disparity_map = np.zeros((len(rows), len(cols)))
 
-print(f"正在进行空间域子集匹配...")
+print("正在进行空间域子集匹配...")
 
 # --- 2. 空间域迭代搜索 ---
 for i, r in enumerate(rows):

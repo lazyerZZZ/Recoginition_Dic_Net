@@ -25,7 +25,8 @@ def generate_deep_dic_dataset(input_dir, output_dir, tile_size=256, stride=256):
     # 3. 三张一组循环处理
     for i in range(0, len(all_files), 3):
         group_files = all_files[i: i + 3]
-        if len(group_files) < 3: break
+        if len(group_files) < 3:
+            break
 
         group_id = (i // 3) + 1  # 对应第 1-50 组
 
@@ -59,7 +60,7 @@ def generate_deep_dic_dataset(input_dir, output_dir, tile_size=256, stride=256):
             print(f"❌ 处理第 {group_id} 组时出错: {e}")
 
     print("-" * 30)
-    print(f"✨ 任务成功完成！")
+    print("✨ 任务成功完成！")
     print(f"📁 数据集保存至: {output_dir}")
     print(f"📊 最终训练样本组数: {total_samples}")
 

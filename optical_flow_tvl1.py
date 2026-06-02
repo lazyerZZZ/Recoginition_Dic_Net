@@ -1,10 +1,10 @@
 import cv2
+import numpy as np
+import os
 from skimage.registration import optical_flow_tvl1
 import matplotlib
 matplotlib.use('Agg')
-import matplotlib.pyplot as plt
-import numpy as np
-import os
+import matplotlib.pyplot as plt  # noqa: E402
 
 # 1. 加载图像并预处理
 img_left = cv2.imread('/home/wenhao/bishe_code/2DTrans3D_photoes/Camera00_00000001_00.bmp', 0)
@@ -36,6 +36,8 @@ save_dir = "/home/wenhao/bishe_code/2DTrans3D_result"
 os.makedirs(save_dir, exist_ok=True)
 
 # 定义一个绘图函数减少重复代码
+
+
 def save_disparity_map(data, title, filename):
     plt.figure(figsize=(12, 9))
     # 剪掉边缘噪声（光流法边缘通常不稳定）
@@ -48,6 +50,7 @@ def save_disparity_map(data, title, filename):
     plt.close()
     return path
 
+
 # 5. 分别生成并保存两个视差场图片
 u_path = save_disparity_map(u_final, "Horizontal Disparity (U Field) - TV-L1", "result_U_field.png")
 v_path = save_disparity_map(v_final, "Vertical Disparity (V Field) - TV-L1", "result_V_field.png")
@@ -58,8 +61,8 @@ np.save(os.path.join(save_dir, 'v_field_tvl1.npy'), v_final)
 
 # --- 验证环节 ---
 print("=" * 50)
-print(f"成功！已生成两个视差场文件：")
+print("成功！已生成两个视差场文件：")
 print(f"1. 水平 U 场: {u_path}")
 print(f"2. 竖直 V 场: {v_path}")
-print(f"数据已导出至 .npy 文件中。")
+print("数据已导出至 .npy 文件中。")
 print("=" * 50)

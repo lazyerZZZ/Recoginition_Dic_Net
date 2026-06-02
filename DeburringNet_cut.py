@@ -18,7 +18,8 @@ def generate_deblur_dataset(input_dir, output_dir, tile_size=256, stride=256):
     # 按照 2 张一组进行迭代
     for i in range(0, len(all_files), 2):
         group_files = all_files[i: i + 2]
-        if len(group_files) < 2: break
+        if len(group_files) < 2:
+            break
 
         group_id = (i // 2) + 1
         imgs = [Image.open(os.path.join(input_dir, f)) for f in group_files]

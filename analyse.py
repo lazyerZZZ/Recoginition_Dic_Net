@@ -1,7 +1,7 @@
 import cv2
-import numpy as np
 from skimage.metrics import peak_signal_noise_ratio as psnr
 from skimage.metrics import structural_similarity as ssim
+
 
 def evaluate_images(original_path, generated_path):
     # 1. 读取图像
@@ -27,7 +27,8 @@ def evaluate_images(original_path, generated_path):
 
     return psnr_val, ssim_val
 
-#--- 使用示例 ---
+
+# --- 使用示例 ---
 original = "/home/wenhao/bishe_code/bishe_DivideNet_photoes_Preprocessing/48_34_clear.png"
 generated = "/home/wenhao/bishe_code/test_results/21/48_34_blended_pred_clear.png"
 p_score, s_score = evaluate_images(original, generated)

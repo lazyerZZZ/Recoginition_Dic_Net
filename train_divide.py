@@ -4,7 +4,9 @@ import torch.optim as optim
 from torch.utils.data import DataLoader, Dataset, random_split
 from torchvision import transforms
 from PIL import Image
-import os, glob, time
+import os
+import glob
+import time
 from tqdm import tqdm
 from models.self_model import DivideNet_V3
 
@@ -20,11 +22,12 @@ class SpeckleDataset(Dataset):
             self.samples.append({
                 "mix": m_path,
                 "clear": os.path.join(root_dir, f"{base}_clear.png"),
-                "blur": os.path.join(root_dir, f"{base}_blurred.png")
+                "blur": os.path.join(root_dir, f"{base}_blurred.png"),
             })
         self.transform = transform
 
-    def __len__(self): return len(self.samples)
+    def __len__(self):
+        return len(self.samples)
 
     def __getitem__(self, idx):
         s = self.samples[idx]
@@ -42,7 +45,7 @@ def train():
     # 基础预处理
     transform = transforms.Compose([
         transforms.Resize((256, 256)),
-        transforms.ToTensor()
+        transforms.ToTensor(),
     ])
 
     # --- 核心修改：划分数据集 ---
@@ -83,8 +86,10 @@ def train():
             mask_c_only = (c < 0.4) & (b > 0.8)  # 只有清晰斑点
             mask_b_only = (b < 0.4) & (c > 0.8)  # 只有模糊斑点
             l_excl = 0
-            if mask_c_only.any(): l_excl += torch.mean(torch.abs(1 - pb[mask_c_only]))
-            if mask_b_only.any(): l_excl += torch.mean(torch.abs(1 - pc[mask_b_only]))
+            if mask_c_only.any():
+                l_excl += torch.mean(torch.abs(1 - pb[mask_c_only]))
+            if mask_b_only.any():
+                l_excl += torch.mean(torch.abs(1 - pc[mask_b_only]))
 
             loss = l_pix + l_sum + 5.0 * l_excl
 

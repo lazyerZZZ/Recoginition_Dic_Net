@@ -1,10 +1,10 @@
 import numpy as np
 import cv2
 import os
-import matplotlib.pyplot as plt
+from scipy.interpolate import griddata
 import matplotlib
 matplotlib.use('Agg')
-from scipy.interpolate import griddata
+import matplotlib.pyplot as plt  # noqa: E402
 
 # --- 1. 读取图像 ---
 path_left = '/home/wenhao/bishe_code/2DTrans3D_photoes/Camera00_00000001_00.bmp'
@@ -30,9 +30,11 @@ p0 = p0.reshape(-1, 1, 2)
 
 # --- 3. 金字塔 Lucas-Kanade 亚像素光流 ---
 print("正在进行金字塔光流追踪 (Coarse-to-Fine)...")
-lk_params = dict(winSize=(41, 41),
-                 maxLevel=4,
-                 criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 50, 0.001))
+lk_params = {
+    'winSize': (41, 41),
+    'maxLevel': 4,
+    'criteria': (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 50, 0.001),
+}
 
 p1, st, err = cv2.calcOpticalFlowPyrLK(img_l, img_r, p0, None, **lk_params)
 

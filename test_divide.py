@@ -1,5 +1,4 @@
 import torch
-import torch.nn as nn
 from torchvision import transforms
 from PIL import Image
 import os
@@ -25,7 +24,7 @@ def test():
     # --- 3. 预处理图片 ---
     transform = transforms.Compose([
         transforms.Resize((256, 256)),
-        transforms.ToTensor()
+        transforms.ToTensor(),
     ])
 
     img_pil = Image.open(input_path).convert('L')

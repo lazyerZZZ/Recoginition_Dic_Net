@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 
 
-##V1
+# V1
 class DivideNet(nn.Module):
     def __init__(self):
         super(DivideNet, self).__init__()
@@ -10,20 +10,20 @@ class DivideNet(nn.Module):
         self.encoder = nn.Sequential(
             nn.Conv2d(1, 64, 3, padding=1), nn.ReLU(),
             nn.MaxPool2d(2),
-            nn.Conv2d(64, 128, 3, padding=1), nn.ReLU()
+            nn.Conv2d(64, 128, 3, padding=1), nn.ReLU(),
         )
         self.up = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True)
 
         # 分支1：还原模糊图像 (Blurred Branch)
         self.branch_blur = nn.Sequential(
             nn.Conv2d(128, 64, 3, padding=1), nn.ReLU(),
-            nn.Conv2d(64, 1, 3, padding=1), nn.Sigmoid()
+            nn.Conv2d(64, 1, 3, padding=1), nn.Sigmoid(),
         )
 
         # 分支2：还原清晰图像 (Clear Branch)
         self.branch_clear = nn.Sequential(
             nn.Conv2d(128, 64, 3, padding=1), nn.ReLU(),
-            nn.Conv2d(64, 1, 3, padding=1), nn.Sigmoid()
+            nn.Conv2d(64, 1, 3, padding=1), nn.Sigmoid(),
         )
 
     def forward(self, x):
@@ -33,13 +33,13 @@ class DivideNet(nn.Module):
         return out_blur, out_clear  # 同时返回两个结果
 
 
-##V2
+# V2
 # 基础卷积模块
 def conv_block(in_ch, out_ch):
     return nn.Sequential(
         nn.Conv2d(in_ch, out_ch, kernel_size=3, padding=1),
         nn.BatchNorm2d(out_ch),
-        nn.LeakyReLU(0.2, inplace=True)
+        nn.LeakyReLU(0.2, inplace=True),
     )
 
 
@@ -58,7 +58,7 @@ class DivideNet_V2(nn.Module):
         self.dec_c = conv_block(128, 64)  # 64(up) + 64(skip)
         self.out_c = nn.Sequential(
             nn.Conv2d(64, 1, kernel_size=1),
-            nn.Sigmoid()
+            nn.Sigmoid(),
         )
 
         # --- Decoder Blur (提取模糊散斑/背景) ---
@@ -66,7 +66,7 @@ class DivideNet_V2(nn.Module):
         self.dec_b = conv_block(128, 64)
         self.out_b = nn.Sequential(
             nn.Conv2d(64, 1, kernel_size=1),
-            nn.Sigmoid()
+            nn.Sigmoid(),
         )
 
     def forward(self, x):
@@ -87,7 +87,8 @@ class DivideNet_V2(nn.Module):
 
         return out_clear, out_blur
 
-#V3
+
+# V3
 class ConvBlock(nn.Module):
     def __init__(self, in_ch, out_ch):
         super().__init__()
@@ -97,9 +98,12 @@ class ConvBlock(nn.Module):
             nn.LeakyReLU(0.2, inplace=True),
             nn.Conv2d(out_ch, out_ch, 3, padding=1),
             nn.BatchNorm2d(out_ch),
-            nn.LeakyReLU(0.2, inplace=True)
+            nn.LeakyReLU(0.2, inplace=True),
         )
-    def forward(self, x): return self.conv(x)
+
+    def forward(self, x):
+        return self.conv(x)
+
 
 class DivideNet_V3(nn.Module):
     def __init__(self):
@@ -138,10 +142,6 @@ class DivideNet_V3(nn.Module):
         return pc, pb
 
 
-import torch
-import torch.nn as nn
-
-
 class DoubleConv(nn.Module):
     def __init__(self, in_ch, out_ch):
         super().__init__()
@@ -151,10 +151,11 @@ class DoubleConv(nn.Module):
             nn.ReLU(inplace=True),
             nn.Conv2d(out_ch, out_ch, 3, padding=1),
             nn.BatchNorm2d(out_ch),
-            nn.ReLU(inplace=True)
+            nn.ReLU(inplace=True),
         )
 
-    def forward(self, x): return self.conv(x)
+    def forward(self, x):
+        return self.conv(x)
 
 
 class DeblurUNet(nn.Module):
@@ -179,13 +180,10 @@ class DeblurUNet(nn.Module):
 
         self.final = nn.Sequential(
             nn.Conv2d(64, 1, 1),
-            nn.Sigmoid()
+            nn.Sigmoid(),
         )
 
     def forward(self, x):
-        # 保存输入用于最后的全局残差 (可选)
-        identity = x
-
         # Encoder
         e1 = self.enc1(x)
         e2 = self.enc2(self.pool1(e1))
