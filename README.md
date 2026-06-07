@@ -382,7 +382,7 @@ This project is for academic and research purposes.
 | **DivideNet** | 将混合散斑图分离为清晰和模糊分量 |
 | **DeblurUNet** | UNet 去模糊网络 |
 | **StrainNet** | 光流/视差估计网络 |
-| **传统 DIC** | 基于子集迭代匹配的 IC-GN 算法 |
+| **传统 DIC** | 基于子集迭代匹配的 SIFT 算法 |
 | **三维重建** | 双目三角化生成三维点云 |
 | **可视化分析** | 点云上色、圆柱拟合、数据分析 |
 
